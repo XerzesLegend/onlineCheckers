@@ -59,12 +59,11 @@ let selectedPiece = {
     minusEighteenthSpace: false
 }
 
-/*---------- Event Listeners ----------*/
 
 //start button
 start.addEventListener('click', updateBoard);
 
-// update board based on socket io
+// update board based on socket io returned data
 function updateBoard(){
     start.removeEventListener('click', updateBoard);
     for(let i=0; i<cells.length; i++){
@@ -107,7 +106,7 @@ function givePiecesEventListeners() {
     }
 }
 
-/*---------- Logic ----------*/
+/*---------- Main Functions ----------*/
 
 // decides which turn the player is on and gives access to the right color
 function getPlayerPieces() {
