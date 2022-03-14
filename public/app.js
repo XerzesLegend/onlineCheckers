@@ -2,7 +2,7 @@
 let socket = io();
 
 // game state
-const board = [
+let board = [
     null, 0, null, 1, null, 2, null, 3,
     4, null, 5, null, 6, null, 7, null,
     null, 8, null, 9, null, 10, null, 11,
@@ -12,7 +12,8 @@ const board = [
     null, 16, null, 17, null, 18, null, 19,
     20, null, 21, null, 22, null, 23, null
 ];
-const kingOrNot = [
+let startBoard = board;
+let kingOrNot = [
     false, false, false, false, false, false, false, false,
     false, false, false, false, false, false, false, false,
     false, false, false, false, false, false, false, false,
@@ -22,27 +23,28 @@ const kingOrNot = [
     false, false, false, false, false, false, false, false,
     false, false, false, false, false, false, false, false
 ];
+let startKing = kingOrNot;
 
-/*---------- Cached Variables ----------*/
-
-// parses pieceId's and returns the index of that piece's place on the board
+// returns index of piece
 function findPiece(pieceId) {
     let piece = parseInt(pieceId);
     return board.indexOf(piece);
 };
 
-// DOM referenes
+// query selectors
 let cells = document.querySelectorAll("td");
 let redsPieces = document.querySelectorAll("span.red");
 let blacksPieces = document.querySelectorAll("span.black");
+let allPieces = document.querySelectorAll("span");
+let start = document.querySelector('#startBtn');
 
-// player properties
+// properties
 let turn = false;
 let redScore = 12;
 let blackScore = 12;
 let playerPieces;
 
-// selected piece properties
+// selected piece object
 let selectedPiece = {
     pieceId: -1,
     indexOfBoardPiece: -1,
@@ -59,6 +61,38 @@ let selectedPiece = {
 
 /*---------- Event Listeners ----------*/
 
+//start button
+start.addEventListener('click', updateBoard);
+
+// update board based on socket io
+function updateBoard(){
+    start.removeEventListener('click', updateBoard);
+    for(let i=0; i<cells.length; i++){
+        if(cells[i].hasChildNodes()){
+            cells[i].removeChild(cells[i].firstChild);
+        }
+    }
+    for(let i=0; i<cells.length; i++){
+        if(board[i] !== null){
+            if(board[i] < 12){
+                cells[i].innerHTML = `<span class="red red-piece" id="${board[i]}"></span>`;
+            }
+            else{
+                cells[i].innerHTML = `<span class="black black-piece" id="${board[i]}"></span>`
+            }
+        }
+    }
+    for(let i=0; i<cells.length; i++){
+        if(kingOrNot[i]){
+            if(cells[i].hasChildNodes()){
+                cells[i].firstChild.classList.add('king');
+            }
+        }
+    }
+    redsPieces = document.querySelectorAll("span.red");
+    blacksPieces = document.querySelectorAll("span.black");
+    givePiecesEventListeners();
+}
 // initialize event listeners on pieces
 function givePiecesEventListeners() {
     if (turn) {
@@ -75,7 +109,7 @@ function givePiecesEventListeners() {
 
 /*---------- Logic ----------*/
 
-// holds the length of the players piece count
+// decides which turn the player is on and gives access to the right color
 function getPlayerPieces() {
     if (turn) {
         playerPieces = redsPieces;
@@ -86,14 +120,14 @@ function getPlayerPieces() {
     resetBorders();
 }
 
-// removes possible moves from old selected piece (* this is needed because the user might re-select a piece *)
+// removes on click events that were made in previous moves
 function removeCellonclick() {
     for (let i = 0; i < cells.length; i++) {
         cells[i].removeAttribute("onclick");
     }
 }
 
-// resets borders to default
+// removes green border on selected piece
 function resetBorders() {
     for (let i = 0; i < playerPieces.length; i++) {
         playerPieces[i].style.border = "1px solid white";
@@ -102,7 +136,7 @@ function resetBorders() {
     getSelectedPiece();
 }
 
-// resets selected piece properties
+// reset properties
 function resetSelectedPieceProperties() {
     selectedPiece.pieceId = -1;
     selectedPiece.pieceId = -1;
@@ -117,14 +151,14 @@ function resetSelectedPieceProperties() {
     selectedPiece.minusEighteenthSpace = false;
 }
 
-// gets ID and index of the board cell its on
+// gets ID and index of the piece's location
 function getSelectedPiece() {
     selectedPiece.pieceId = parseInt(event.target.id);
     selectedPiece.indexOfBoardPiece = findPiece(selectedPiece.pieceId);
     isPieceKing();
 }
 
-// checks if selected piece is a king
+// checks if piece king
 function isPieceKing() {
     if (document.getElementById(selectedPiece.pieceId).classList.contains("king")) {
         selectedPiece.isKing = true;
@@ -134,68 +168,68 @@ function isPieceKing() {
     getAvailableSpaces();
 }
 
-// gets the moves that the selected piece can make
+// gets legal moves
 function getAvailableSpaces() {
     if (board[selectedPiece.indexOfBoardPiece + 7] === null && 
-        cells[selectedPiece.indexOfBoardPiece + 7].classList.contains("noPieceHere") !== true) {
+        cells[selectedPiece.indexOfBoardPiece + 7].classList.contains("empty") !== true) {
         selectedPiece.seventhSpace = true;
     }
     if (board[selectedPiece.indexOfBoardPiece + 9] === null && 
-        cells[selectedPiece.indexOfBoardPiece + 9].classList.contains("noPieceHere") !== true) {
+        cells[selectedPiece.indexOfBoardPiece + 9].classList.contains("empty") !== true) {
         selectedPiece.ninthSpace = true;
     }
     if (board[selectedPiece.indexOfBoardPiece - 7] === null && 
-        cells[selectedPiece.indexOfBoardPiece - 7].classList.contains("noPieceHere") !== true) {
+        cells[selectedPiece.indexOfBoardPiece - 7].classList.contains("empty") !== true) {
         selectedPiece.minusSeventhSpace = true;
     }
     if (board[selectedPiece.indexOfBoardPiece - 9] === null && 
-        cells[selectedPiece.indexOfBoardPiece - 9].classList.contains("noPieceHere") !== true) {
+        cells[selectedPiece.indexOfBoardPiece - 9].classList.contains("empty") !== true) {
         selectedPiece.minusNinthSpace = true;
     }
-    checkAvailableJumpSpaces();
+    checkEliminiations();
 }
 
-// gets the moves that the selected piece can jump
-function checkAvailableJumpSpaces() {
+// gets legal eliminations
+function checkEliminiations() {
     if (turn) {
         if (board[selectedPiece.indexOfBoardPiece + 14] === null 
-        && cells[selectedPiece.indexOfBoardPiece + 14].classList.contains("noPieceHere") !== true
+        && cells[selectedPiece.indexOfBoardPiece + 14].classList.contains("empty") !== true
         && board[selectedPiece.indexOfBoardPiece + 7] >= 12) {
             selectedPiece.fourteenthSpace = true;
         }
         if (board[selectedPiece.indexOfBoardPiece + 18] === null 
-        && cells[selectedPiece.indexOfBoardPiece + 18].classList.contains("noPieceHere") !== true
+        && cells[selectedPiece.indexOfBoardPiece + 18].classList.contains("empty") !== true
         && board[selectedPiece.indexOfBoardPiece + 9] >= 12) {
             selectedPiece.eighteenthSpace = true;
         }
         if (board[selectedPiece.indexOfBoardPiece - 14] === null 
-        && cells[selectedPiece.indexOfBoardPiece - 14].classList.contains("noPieceHere") !== true
+        && cells[selectedPiece.indexOfBoardPiece - 14].classList.contains("empty") !== true
         && board[selectedPiece.indexOfBoardPiece - 7] >= 12) {
             selectedPiece.minusFourteenthSpace = true;
         }
         if (board[selectedPiece.indexOfBoardPiece - 18] === null 
-        && cells[selectedPiece.indexOfBoardPiece - 18].classList.contains("noPieceHere") !== true
+        && cells[selectedPiece.indexOfBoardPiece - 18].classList.contains("empty") !== true
         && board[selectedPiece.indexOfBoardPiece - 9] >= 12) {
             selectedPiece.minusEighteenthSpace = true;
         }
     } 
     else {
         if (board[selectedPiece.indexOfBoardPiece + 14] === null 
-        && cells[selectedPiece.indexOfBoardPiece + 14].classList.contains("noPieceHere") !== true
+        && cells[selectedPiece.indexOfBoardPiece + 14].classList.contains("empty") !== true
         && board[selectedPiece.indexOfBoardPiece + 7] < 12 && board[selectedPiece.indexOfBoardPiece + 7] !== null) {
             selectedPiece.fourteenthSpace = true;
         }
         if (board[selectedPiece.indexOfBoardPiece + 18] === null 
-        && cells[selectedPiece.indexOfBoardPiece + 18].classList.contains("noPieceHere") !== true
+        && cells[selectedPiece.indexOfBoardPiece + 18].classList.contains("empty") !== true
         && board[selectedPiece.indexOfBoardPiece + 9] < 12 && board[selectedPiece.indexOfBoardPiece + 9] !== null) {
             selectedPiece.eighteenthSpace = true;
         }
-        if (board[selectedPiece.indexOfBoardPiece - 14] === null && cells[selectedPiece.indexOfBoardPiece - 14].classList.contains("noPieceHere") !== true
+        if (board[selectedPiece.indexOfBoardPiece - 14] === null && cells[selectedPiece.indexOfBoardPiece - 14].classList.contains("empty") !== true
         && board[selectedPiece.indexOfBoardPiece - 7] < 12 
         && board[selectedPiece.indexOfBoardPiece - 7] !== null) {
             selectedPiece.minusFourteenthSpace = true;
         }
-        if (board[selectedPiece.indexOfBoardPiece - 18] === null && cells[selectedPiece.indexOfBoardPiece - 18].classList.contains("noPieceHere") !== true
+        if (board[selectedPiece.indexOfBoardPiece - 18] === null && cells[selectedPiece.indexOfBoardPiece - 18].classList.contains("empty") !== true
         && board[selectedPiece.indexOfBoardPiece - 9] < 12
         && board[selectedPiece.indexOfBoardPiece - 9] !== null) {
             selectedPiece.minusEighteenthSpace = true;
@@ -204,7 +238,7 @@ function checkAvailableJumpSpaces() {
     checkPieceConditions();
 }
 
-// restricts movement if the piece is a king
+// resets legal movement if piece not king
 function checkPieceConditions() {
     if (selectedPiece.isKing) {
         document.getElementById(selectedPiece.pieceId).style.border = "3px solid green";
@@ -227,7 +261,7 @@ function checkPieceConditions() {
     giveCellsClick();
 }
 
-// gives the cells on the board a 'click' bassed on the possible moves
+// give board cells on click for piece to move
 function giveCellsClick() {
     if (selectedPiece.seventhSpace) {
         cells[selectedPiece.indexOfBoardPiece + 7].setAttribute("onclick", "makeMove(7)");
@@ -255,9 +289,7 @@ function giveCellsClick() {
     }
 }
 
-/* v when the cell is clicked v */
-
-// makes the move that was clicked
+// initiates move
 function makeMove(number) {
     document.getElementById(selectedPiece.pieceId).remove();
     cells[selectedPiece.indexOfBoardPiece].innerHTML = "";
@@ -291,7 +323,7 @@ function makeMove(number) {
     }
 }
 
-// Changes the board states data on the back end
+// changes game state data
 function changeData(indexOfBoardPiece, modifiedIndex, removePiece) {
     board[indexOfBoardPiece] = null;
     kingOrNot[indexOfBoardPiece] = false;
@@ -325,50 +357,36 @@ function changeData(indexOfBoardPiece, modifiedIndex, removePiece) {
     removeEventListeners();
 }
 
-// removes the 'onClick' event listeners for pieces
+// removes click event for all pieces
 function removeEventListeners() {
-    if (turn) {
-        for (let i = 0; i < redsPieces.length; i++) {
-            redsPieces[i].removeEventListener("click", getPlayerPieces);
-        }
-    } 
-    else {
-        for (let i = 0; i < blacksPieces.length; i++) {
-            blacksPieces[i].removeEventListener("click", getPlayerPieces);
-        }
+    for(let i=0; i<allPieces.length; i++){
+        allPieces[i].removeEventListener("click", getPlayerPieces);
     }
     turn = !turn;
+    socket.emit("moved", {board, kingOrNot, turn, redScore, blackScore});
+    
+}
+
+// listens when other player made their move
+socket.on("moved", (arg) => {
+    console.log("moved!");
+    board = arg["board"];
+    kingOrNot = arg["kingOrNot"];
+    redScore = arg["redScore"];
+    blackScore = arg["blackScore"];
+    turn = arg["turn"];
+    if(redScore==0 || blackScore ==0){
+        board = startBoard;
+        kingOrNot = startKing;
+        redScore = 12;
+        blackScore = 12;
+    }
     updateBoard();
-}
+});
 
-function updateBoard(){
-    for(let i=0; i<cells.length; i++){
-        if(cells[i].hasChildNodes()){
-            cells[i].removeChild(cells[i].firstChild);
-        }
-    }
-    for(let i=0; i<cells.length; i++){
-        if(board[i] !== null){
-            if(board[i] < 12){
-                cells[i].innerHTML = `<span class="red red-piece" id="${board[i]}"></span>`;
-            }
-            else{
-                cells[i].innerHTML = `<span class="black black-piece" id="${board[i]}"></span>`
-            }
-        }
-    }
-    for(let i=0; i<cells.length; i++){
-        if(kingOrNot[i]){
-            if(cells[i].hasChildNodes()){
-                cells[i].firstChild.classList.add('king');
-            }
-        }
-    }
-    redsPieces = document.querySelectorAll("span.red");
-    blacksPieces = document.querySelectorAll("span.black");
-    givePiecesEventListeners();
-}
-
-givePiecesEventListeners();
-
-// cells, board
+// using five data variables:
+// board
+// kingOrNot
+// turn
+// redScore
+// blackScore

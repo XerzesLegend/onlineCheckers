@@ -22,4 +22,7 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         console.log("user has disconnected");
     });
+    socket.on("moved", (arg) => {
+        socket.broadcast.emit("moved", arg);
+    });
 });

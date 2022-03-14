@@ -8,6 +8,7 @@ div#main {
     justify-content: space-between;
     align-items: center;
     height: 100vh;
+    padding: 16px;
 }
 
 div {
@@ -16,7 +17,7 @@ div {
 }
 
 
-.noPieceHere {
+.empty {
     background-color: #F0D2B4;
 }
 
@@ -46,17 +47,25 @@ td {
 }
 
 .king.red-piece {
-    background-color: orange;
+    background-color: rgb(28, 0, 151);
 }
 
 .king.black-piece {
-    background-color: purple;
-}
-
-p {
-    display: inline-block;
+    background-color: rgb(240, 89, 190);
 }
 
 span {
     display: inline-block;
+}
+
+.startButtonContainer{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#startBtn{
+    background-color: rgb(13, 219, 151);
+    border: solid 1px;
+    padding: 16px;
+    font-size: 24px;
 }
