@@ -366,6 +366,14 @@ function removeEventListeners() {
     
 }
 
+// resets variables at end game
+function resetGame(){
+    board = startBoard;
+    kingOrNot = startKing;
+    redScore = 12;
+    blackScore = 12;
+}
+
 // listens when other player made their move
 socket.on("moved", (arg) => {
     console.log("moved!");
@@ -375,12 +383,17 @@ socket.on("moved", (arg) => {
     blackScore = arg["blackScore"];
     turn = arg["turn"];
     if(redScore==0 || blackScore ==0){
-        board = startBoard;
-        kingOrNot = startKing;
-        redScore = 12;
-        blackScore = 12;
+        socket.emit("endGame", true);
+        resetGame();
     }
     updateBoard();
+});
+
+socket.on("endGame", (arg) => {
+    if(arg){
+        resetGame();
+        updateBoard();
+    }
 });
 
 // using five data variables:

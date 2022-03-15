@@ -47,11 +47,11 @@ td {
 }
 
 .king.red-piece {
-    background-color: rgb(28, 0, 151);
+    background-color: rgb(240, 89, 190);
 }
 
 .king.black-piece {
-    background-color: rgb(240, 89, 190);
+    background-color: rgb(28, 0, 151);
 }
 
 span {

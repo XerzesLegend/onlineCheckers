@@ -25,4 +25,8 @@ io.on('connection', (socket) => {
     socket.on("moved", (arg) => {
         socket.broadcast.emit("moved", arg);
     });
+
+    socket.on("endGame", (arg) => {
+        socket.emit("endGame", arg);
+    })
 });
